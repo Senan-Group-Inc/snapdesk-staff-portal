@@ -10,8 +10,8 @@ const urbanist = Urbanist({
 })
 
 export const metadata: Metadata = {
-  title: 'SnapDesk — Staff / Platform admin',
-  description: 'Platform administration for SnapDesk',
+  title: 'Service Desk — Staff admin',
+  description: 'Senan Service Desk platform administration',
 }
 
 export default function RootLayout({

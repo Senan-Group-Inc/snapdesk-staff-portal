@@ -56,8 +56,8 @@ export default function AdminLoginPage() {
         code: data.code,
       });
       setUser(userData);
-              toast.success('Welcome back');
-              router.prefetch('/admin/organisations');
+      toast.success('Welcome back');
+      router.prefetch('/admin/organisations');
       router.push('/admin/organisations');
     } catch (error: any) {
       toast.error(handleApiError(error));
@@ -71,12 +71,12 @@ export default function AdminLoginPage() {
       <div className="max-w-lg w-full">
         {/* Logo/Header */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">SnapDesk</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Service Desk</h1>
           <h2 className="text-xl font-semibold text-gray-700">
             Staff Login
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            Sign in to your staff account
+            Sign in to manage organisations and the Senan team
           </p>
         </div>
 
@@ -149,7 +149,7 @@ export default function AdminLoginPage() {
                   type="email"
                   id="email"
                   className="block w-full px-4 py-4 border border-gray-300 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-admin focus:border-admin transition-all bg-white"
-                  placeholder="staff@snapdesk.com"
+                  placeholder="you@senangroupafrica.com"
                 />
                 {errors.email && (
                   <p className="mt-3 text-sm text-red-600">{errors.email.message}</p>
