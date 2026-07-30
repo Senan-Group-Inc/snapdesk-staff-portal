@@ -7,7 +7,6 @@ import staffAuthService from '@/services/staff-auth.service';
 import { useStaffAuthStore } from '@/store/staff-auth-store';
 import { handleApiError } from '@/utils/error-handler';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
 
 interface LoginFormData {
   email: string;
@@ -274,11 +273,8 @@ export default function AdminLoginPage() {
 
         {/* Footer */}
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Not a staff member?{' '}
-            <Link href="/client/login" className="font-medium text-admin hover:text-admin-600 transition-colors">
-              Client Login
-            </Link>
+          <p className="text-sm text-gray-500 text-center">
+            Senan Service Desk staff access only
           </p>
         </div>
       </div>

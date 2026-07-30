@@ -3,38 +3,24 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import staffAuthService from '@/services/staff-auth.service';
-import { isAdminSubdomain, getOrganizationSubdomain } from '@/utils/subdomain';
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode;
 }
 
+/**
+ * Staff portal only hosts /admin routes — never redirect to /client/*.
+ */
 export default function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = () => {
-      // In production, only allow admin routes on admin subdomain
-      if (typeof window !== 'undefined') {
-        const hostname = window.location.hostname;
-        const isLocalhost = hostname.includes('localhost') || hostname === '127.0.0.1';
-        
-        // If not localhost and not on admin subdomain, redirect to client
-        if (!isLocalhost && !isAdminSubdomain()) {
-          router.push('/client/login');
-          return;
-        }
-      }
-
-      if (!staffAuthService.isAuthenticated()) {
-        router.push('/admin/login');
-      } else {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
+    if (!staffAuthService.isAuthenticated()) {
+      router.replace('/admin/login');
+      return;
+    }
+    setIsLoading(false);
   }, [router]);
 
   if (isLoading) {
@@ -50,4 +36,3 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
 
   return <>{children}</>;
 }
-

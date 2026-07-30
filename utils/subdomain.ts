@@ -1,81 +1,84 @@
 /**
- * Extract the subdomain from the current hostname
- * Examples:
- * - pharstcare.snapdesk.pywe.org -> pharstcare
- * - bluerocktx.snapdesk.pywe.org -> bluerocktx
+ * Subdomain helpers for the staff portal host.
+ *
+ * Production examples:
+ * - admin.senangroupafrica.com -> admin
  * - admin.snapdesk.pywe.org -> admin
- * - localhost:3000 -> null (development)
- * - snapdesk.pywe.org -> null (main domain)
+ *
+ * MAIN_DOMAIN (optional): e.g. senangroupafrica.com — used to strip the apex.
  */
-export function getSubdomain(): string | null {
-  if (typeof window === 'undefined') {
+
+function mainDomainSuffix(): string | null {
+  const raw = process.env.NEXT_PUBLIC_MAIN_DOMAIN?.trim().toLowerCase();
+  if (!raw || raw === 'localhost') return null;
+  return raw.replace(/^\.+/, '');
+}
+
+function extractSubdomainFromHost(hostname: string): string | null {
+  const host = hostname.split(':')[0].toLowerCase();
+
+  if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost')) {
     return null;
   }
 
-  const hostname = window.location.hostname;
-
-  // In development, return null to show organization selection
-  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('localhost')) {
-    return null;
+  // Explicit admin host short-circuit
+  if (host.startsWith('admin.')) {
+    return 'admin';
   }
 
-  // Split the hostname by dots
-  const parts = hostname.split('.');
+  const main = mainDomainSuffix();
+  if (main && (host === main || host === `www.${main}`)) {
+    return null;
+  }
+  if (main && host.endsWith(`.${main}`)) {
+    const left = host.slice(0, -(main.length + 1));
+    const first = left.split('.')[0];
+    if (first && first !== 'www') return first;
+  }
 
-  // Check if it's a subdomain pattern: subdomain.snapdesk.pywe.org
-  // We expect at least 3 parts: [subdomain, snapdesk, pywe, org]
+  const parts = host.split('.');
+
+  // Legacy: subdomain.snapdesk.pywe.org (4+ labels)
   if (parts.length >= 4) {
-    const subdomain = parts[0];
-    // Verify it's not the main domain (snapdesk)
-    if (subdomain && subdomain !== 'snapdesk' && subdomain !== 'www') {
-      return subdomain;
-    }
+    const sub = parts[0];
+    if (sub && sub !== 'snapdesk' && sub !== 'www') return sub;
   }
 
-  // Also check for pattern: subdomain.snapdesk.pywe.org
-  // If the second part is 'snapdesk', the first part is the subdomain
+  // Legacy: subdomain.snapdesk.tld
   if (parts.length >= 3 && parts[1] === 'snapdesk') {
-    const subdomain = parts[0];
-    if (subdomain && subdomain !== 'www') {
-      return subdomain;
-    }
+    const sub = parts[0];
+    if (sub && sub !== 'www') return sub;
+  }
+
+  // Generic: subdomain.domain.tld (e.g. admin.senangroupafrica.com)
+  if (parts.length >= 3) {
+    const sub = parts[0];
+    if (sub && sub !== 'www') return sub;
   }
 
   return null;
 }
 
-/**
- * Check if the current subdomain is the admin subdomain
- * Examples:
- * - admin.snapdesk.pywe.org -> true
- * - pharstcare.snapdesk.pywe.org -> false
- * - localhost:3000 -> false (development)
- */
-export function isAdminSubdomain(): boolean {
-  const subdomain = getSubdomain();
-  return subdomain === 'admin';
+export function getSubdomain(): string | null {
+  if (typeof window === 'undefined') return null;
+  return extractSubdomainFromHost(window.location.hostname);
 }
 
-/**
- * Get the organization subdomain (excludes admin)
- * Returns null if subdomain is 'admin' or if no subdomain
- * Examples:
- * - pharstcare.snapdesk.pywe.org -> pharstcare
- * - admin.snapdesk.pywe.org -> null
- * - localhost:3000 -> null (development)
- */
+/** Shared with proxy.ts */
+export function getSubdomainFromHostname(hostname: string): string | null {
+  return extractSubdomainFromHost(hostname);
+}
+
+export function isAdminSubdomain(): boolean {
+  return getSubdomain() === 'admin';
+}
+
 export function getOrganizationSubdomain(): string | null {
   const subdomain = getSubdomain();
-  if (subdomain && subdomain !== 'admin') {
-    return subdomain;
-  }
+  if (subdomain && subdomain !== 'admin') return subdomain;
   return null;
 }
 
-/**
- * Check if we're in a subdomain environment (production)
- */
 export function isSubdomainEnvironment(): boolean {
   return getSubdomain() !== null;
 }
-
