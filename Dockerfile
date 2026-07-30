@@ -13,8 +13,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p ./public
 
-ARG NEXT_PUBLIC_API_BASE_URL=https://snapdesk.pywe.org/api/v1
-ARG NEXT_PUBLIC_MAIN_DOMAIN=snapdesk.pywe.org
+ARG NEXT_PUBLIC_API_BASE_URL=https://apis.senangroupafrica.com/api/v1
+ARG NEXT_PUBLIC_MAIN_DOMAIN=senangroupafrica.com
 ARG NEXT_PUBLIC_GLPI_URL=https://glpi.senangroupafrica.com
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_MAIN_DOMAIN=$NEXT_PUBLIC_MAIN_DOMAIN
