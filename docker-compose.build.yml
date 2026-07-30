@@ -7,8 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile.prod
       args:
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://snapdesk.pywe.org/api/v1}
-        NEXT_PUBLIC_MAIN_DOMAIN: ${NEXT_PUBLIC_MAIN_DOMAIN:-snapdesk.pywe.org}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://apis.senangroupafrica.com/api/v1}
+        NEXT_PUBLIC_MAIN_DOMAIN: ${NEXT_PUBLIC_MAIN_DOMAIN:-senangroupafrica.com}
         NEXT_PUBLIC_GLPI_URL: ${NEXT_PUBLIC_GLPI_URL:-https://glpi.senangroupafrica.com}
     image: ${STAFF_PORTAL_IMAGE:-ghcr.io/senan-group-inc/snapdesk-staff-portal}:${STAFF_PORTAL_IMAGE_TAG:-local}
     container_name: snapdesk-staff-portal

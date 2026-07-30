@@ -16,8 +16,13 @@ network `servicedesk_net`. Servers **pull** the image — they do **not** run `d
 | `:v1.2.3` | Git tags `v*` |
 
 `NEXT_PUBLIC_*` values are **baked at image build time** (Next.js inlines them).
-Update the build-args in `.github/workflows/build-prod-image.yml` if API / domain /
-GLPI URLs change, then rebuild.
+Current production build-args point at:
+
+- `NEXT_PUBLIC_API_BASE_URL=https://apis.senangroupafrica.com/api/v1`
+- `NEXT_PUBLIC_MAIN_DOMAIN=senangroupafrica.com`
+- `NEXT_PUBLIC_GLPI_URL=https://glpi.senangroupafrica.com`
+
+Update `.github/workflows/build-prod-image.yml` if those change, then rebuild.
 
 ## Prerequisites
 
