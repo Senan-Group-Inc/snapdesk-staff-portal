@@ -1,0 +1,21 @@
+# Optional local/CI build of the production image (not used on servers).
+# Prefer: push to main → GHCR → docker compose -f docker-compose.prod.yml up -d
+
+services:
+  snapdesk-staff-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://snapdesk.pywe.org/api/v1}
+        NEXT_PUBLIC_MAIN_DOMAIN: ${NEXT_PUBLIC_MAIN_DOMAIN:-snapdesk.pywe.org}
+        NEXT_PUBLIC_GLPI_URL: ${NEXT_PUBLIC_GLPI_URL:-https://glpi.senangroupafrica.com}
+    image: ${STAFF_PORTAL_IMAGE:-ghcr.io/senan-group-inc/snapdesk-staff-portal}:${STAFF_PORTAL_IMAGE_TAG:-local}
+    container_name: snapdesk-staff-portal
+    restart: unless-stopped
+    ports:
+      - "${STAFF_PORTAL_HOST_PORT:-3001}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"

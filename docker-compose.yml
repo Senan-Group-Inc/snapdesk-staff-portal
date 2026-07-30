@@ -1,0 +1,22 @@
+# Dev compose — hot reload. Run from this directory.
+# Production: use docker-compose.prod.yml (pull GHCR image).
+
+services:
+  staff-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: snapdesk_staff_portal
+    ports:
+      - "${STAFF_PORTAL_HOST_PORT:-3001}:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://host.docker.internal:9000/api/v1}
+      - NEXT_PUBLIC_MAIN_DOMAIN=${NEXT_PUBLIC_MAIN_DOMAIN:-localhost}
+      - NEXT_PUBLIC_GLPI_URL=${NEXT_PUBLIC_GLPI_URL:-https://glpi.senangroupafrica.com}
+    volumes:
+      - .:/app
+      - staff_portal_node_modules:/app/node_modules
+    restart: unless-stopped
+
+volumes:
+  staff_portal_node_modules:

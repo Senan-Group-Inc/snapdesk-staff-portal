@@ -1,0 +1,38 @@
+# SnapDesk Staff Portal — production stack
+# Pulls a pre-built image from GHCR (built by CI on push to main).
+# Servers do not run docker build.
+#
+# Build-time NEXT_PUBLIC_* values are baked into the image by CI.
+# Override STAFF_PORTAL_IMAGE / STAFF_PORTAL_IMAGE_TAG in the panel if needed.
+
+services:
+  snapdesk-staff-portal:
+    image: ${STAFF_PORTAL_IMAGE:-ghcr.io/senan-group-inc/snapdesk-staff-portal}:${STAFF_PORTAL_IMAGE_TAG:-main}
+    pull_policy: always
+    container_name: snapdesk-staff-portal
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+    expose:
+      - "3000"
+    networks:
+      - servicedesk_net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/admin/login',(r)=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+networks:
+  servicedesk_net:
+    external: true
+    name: servicedesk_net
