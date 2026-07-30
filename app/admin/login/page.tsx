@@ -56,8 +56,8 @@ export default function AdminLoginPage() {
         code: data.code,
       });
       setUser(userData);
-      toast.success('Login successful!');
-      router.prefetch('/admin/organisations');
+              toast.success('Welcome back');
+              router.prefetch('/admin/organisations');
       router.push('/admin/organisations');
     } catch (error: any) {
       toast.error(handleApiError(error));
