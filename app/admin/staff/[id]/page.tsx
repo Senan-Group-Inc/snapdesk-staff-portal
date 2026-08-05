@@ -140,7 +140,7 @@ export default function StaffDetailPage() {
                       ...roles.map((role) => ({
                         value: String(role.id),
                         label: role.glpi_profile_name
-                          ? `${role.name} → ${role.glpi_profile_name}`
+                          ? `${role.name} › ${role.glpi_profile_name}`
                           : role.name,
                       })),
                     ]}

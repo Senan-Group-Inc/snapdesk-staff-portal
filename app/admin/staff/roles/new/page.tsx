@@ -134,7 +134,7 @@ export default function NewStaffRolePage() {
                 value={form.glpi_profile_name}
                 onChange={(v) => setForm({ ...form, glpi_profile_name: v })}
                 placeholder="None (skip GLPI provisioning)"
-                hint="Must match a profile name in GLPI Setup → Profiles (e.g. Technician)."
+                hint="Must match a profile name in GLPI Setup › Profiles (e.g. Technician)."
                 options={[
                   { value: '', label: 'None (skip GLPI provisioning)' },
                   ...GLPI_PROFILES.filter(Boolean).map((name) => ({
