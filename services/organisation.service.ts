@@ -11,8 +11,7 @@ import {
 } from '@/types';
 
 /**
- * Staff organisation API uses SimpleRouter(trailing_slash=False).
- * List lives at /organisation/; detail/actions have no trailing slash after the pk/action.
+ * Staff organisation routes use trailing slashes (SimpleRouter trailing_slash=True).
  */
 class OrganisationService {
   async listOrganisations(params?: {
@@ -30,13 +29,13 @@ class OrganisationService {
   }
 
   async getOrganisation(id: number): Promise<StaffOrganisation> {
-    const response = await staffApiClient.get<StaffOrganisation>(`/organisation/${id}`);
+    const response = await staffApiClient.get<StaffOrganisation>(`/organisation/${id}/`);
     return response.data;
   }
 
   async getOrganisationDetails(id: number): Promise<StaffOrganisation> {
     const response = await staffApiClient.get<StaffOrganisation>(
-      `/organisation/${id}/details`
+      `/organisation/${id}/details/`
     );
     return response.data;
   }
@@ -53,7 +52,7 @@ class OrganisationService {
     data: UpdateStaffOrganisationRequest
   ): Promise<StaffOrganisation> {
     const response = await staffApiClient.patch<StaffOrganisation>(
-      `/organisation/${id}`,
+      `/organisation/${id}/`,
       data
     );
     return response.data;
@@ -64,7 +63,7 @@ class OrganisationService {
     data: UpdateStaffOrganisationRequest
   ): Promise<StaffOrganisation> {
     const response = await staffApiClient.put<StaffOrganisation>(
-      `/organisation/${id}`,
+      `/organisation/${id}/`,
       data
     );
     return response.data;
@@ -72,14 +71,14 @@ class OrganisationService {
 
   async markPortalReady(id: number): Promise<MarkPortalReadyResponse> {
     const response = await staffApiClient.post<MarkPortalReadyResponse>(
-      `/organisation/${id}/mark-portal-ready`
+      `/organisation/${id}/mark-portal-ready/`
     );
     return response.data;
   }
 
   async unmarkPortalReady(id: number): Promise<StaffOrganisation> {
     const response = await staffApiClient.post<StaffOrganisation>(
-      `/organisation/${id}/unmark-portal-ready`
+      `/organisation/${id}/unmark-portal-ready/`
     );
     return response.data;
   }
@@ -89,7 +88,7 @@ class OrganisationService {
     include: 'all' | 'owner' = 'all'
   ): Promise<MarkPortalReadyResponse> {
     const response = await staffApiClient.post<MarkPortalReadyResponse>(
-      `/organisation/${id}/resend-portal-email`,
+      `/organisation/${id}/resend-portal-email/`,
       { include }
     );
     return response.data;
@@ -97,7 +96,7 @@ class OrganisationService {
 
   async listMembers(orgId: number): Promise<StaffOrganisationMember[]> {
     const response = await staffApiClient.get<StaffOrganisationMember[]>(
-      `/organisation/${orgId}/members`
+      `/organisation/${orgId}/members/`
     );
     return response.data;
   }
@@ -107,7 +106,7 @@ class OrganisationService {
     data: CreateStaffOrganisationMemberRequest
   ): Promise<StaffOrganisationMember> {
     const response = await staffApiClient.post<StaffOrganisationMember>(
-      `/organisation/${orgId}/members`,
+      `/organisation/${orgId}/members/`,
       data
     );
     return response.data;
@@ -115,7 +114,7 @@ class OrganisationService {
 
   async listRoles(orgId: number): Promise<StaffOrganisationRole[]> {
     const response = await staffApiClient.get<StaffOrganisationRole[]>(
-      `/organisation/${orgId}/roles`
+      `/organisation/${orgId}/roles/`
     );
     return response.data;
   }
