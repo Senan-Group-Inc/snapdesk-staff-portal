@@ -12,6 +12,7 @@ import staffService from '@/services/staff.service';
 import { StaffRoleList } from '@/types';
 import { handleApiError } from '@/utils/error-handler';
 import { glpiLoginUrl } from '@/utils/glpi-url';
+import { ModalSelect } from '@/components/ui';
 
 export default function NewStaffPage() {
   const router = useRouter();
@@ -98,7 +99,7 @@ export default function NewStaffPage() {
     return (
       <AdminProtectedRoute>
         <AdminLayout>
-          <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-100 p-12 text-center">
+          <div className="w-full bg-white rounded-xl border border-gray-100 p-12 text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
             <p className="text-sm text-gray-500">You do not have permission to create staff.</p>
           </div>
@@ -110,7 +111,7 @@ export default function NewStaffPage() {
   return (
     <AdminProtectedRoute>
       <AdminLayout>
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full">
           <div className="mb-8">
             <Link href="/admin/staff" className="text-sm text-admin hover:text-admin-600">
               ← Back to staff
@@ -217,26 +218,28 @@ export default function NewStaffPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Staff role *</label>
-                <select
+                <ModalSelect
+                  label="Staff role"
+                  labelVisible
                   required
-                  value={form.role_id}
-                  onChange={(e) =>
+                  value={form.role_id === '' ? '' : String(form.role_id)}
+                  onChange={(v) =>
                     setForm({
                       ...form,
-                      role_id: e.target.value ? Number(e.target.value) : '',
+                      role_id: v ? Number(v) : '',
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-admin focus:border-admin"
-                >
-                  <option value="">Select a role…</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                      {role.glpi_profile_name ? ` → GLPI ${role.glpi_profile_name}` : ''}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Select a role…"
+                  options={[
+                    { value: '', label: 'Select a role…' },
+                    ...roles.map((role) => ({
+                      value: String(role.id),
+                      label: role.glpi_profile_name
+                        ? `${role.name} → GLPI ${role.glpi_profile_name}`
+                        : role.name,
+                    })),
+                  ]}
+                />
                 {selectedRole?.glpi_profile_name && (
                   <p className="mt-1 text-xs text-gray-500">
                     Will map to GLPI profile “{selectedRole.glpi_profile_name}”.
@@ -273,11 +276,29 @@ export default function NewStaffPage() {
                   className="mt-1"
                 />
                 <span className="text-sm text-gray-700">
-                  Also create a GLPI account so they can log into the service desk engine
+                  Also create a GLPI account so they can log into the service desk engine.
+                  {form.provision_glpi && form.email.trim() ? (
+                    <>
+                      {' '}
+                      Their GLPI login will be their email:{' '}
+                      <span className="font-mono text-gray-900">
+                        {form.email.trim().toLowerCase()}
+                      </span>
+                      .
+                    </>
+                  ) : form.provision_glpi ? (
+                    <> Their GLPI login will be the email you enter above.</>
+                  ) : null}
                 </span>
               </label>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex justify-end gap-3 pt-2">
+                <Link
+                  href="/admin/staff"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </Link>
                 <button
                   type="submit"
                   disabled={isSaving}
@@ -285,12 +306,6 @@ export default function NewStaffPage() {
                 >
                   {isSaving ? 'Creating…' : 'Create staff'}
                 </button>
-                <Link
-                  href="/admin/staff"
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </Link>
               </div>
             </form>
           )}

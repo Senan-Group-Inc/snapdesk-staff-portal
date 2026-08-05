@@ -12,6 +12,7 @@ import staffService from '@/services/staff.service';
 import { StaffProfileDetail, StaffRoleList } from '@/types';
 import { handleApiError } from '@/utils/error-handler';
 import { glpiLoginUrl } from '@/utils/glpi-url';
+import { ModalSelect } from '@/components/ui';
 
 export default function StaffDetailPage() {
   const params = useParams();
@@ -84,7 +85,7 @@ export default function StaffDetailPage() {
     return (
       <AdminProtectedRoute>
         <AdminLayout>
-          <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-100 p-12 text-center">
+          <div className="w-full bg-white rounded-xl border border-gray-100 p-12 text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
           </div>
         </AdminLayout>
@@ -95,7 +96,7 @@ export default function StaffDetailPage() {
   return (
     <AdminProtectedRoute>
       <AdminLayout>
-        <div className="max-w-3xl mx-auto">
+        <div className="w-full">
           <Link href="/admin/staff" className="text-sm text-admin hover:text-admin-600">
             ← Back to staff
           </Link>
@@ -127,21 +128,23 @@ export default function StaffDetailPage() {
               {canManage && (
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-3">Role</h2>
-                  <select
-                    value={profile.role?.id || ''}
-                    onChange={(e) => {
-                      if (e.target.value) handleAssignRole(Number(e.target.value));
+                  <ModalSelect
+                    label="Assign role"
+                    value={profile.role?.id ? String(profile.role.id) : ''}
+                    onChange={(v) => {
+                      if (v) handleAssignRole(Number(v));
                     }}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-admin focus:border-admin"
-                  >
-                    <option value="">Select role…</option>
-                    {roles.map((role) => (
-                      <option key={role.id} value={role.id}>
-                        {role.name}
-                        {role.glpi_profile_name ? ` → ${role.glpi_profile_name}` : ''}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="Select role…"
+                    options={[
+                      { value: '', label: 'Select role…' },
+                      ...roles.map((role) => ({
+                        value: String(role.id),
+                        label: role.glpi_profile_name
+                          ? `${role.name} → ${role.glpi_profile_name}`
+                          : role.name,
+                      })),
+                    ]}
+                  />
                 </div>
               )}
 
@@ -150,8 +153,10 @@ export default function StaffDetailPage() {
                 {profile.glpi_user_id ? (
                   <dl className="text-sm space-y-2">
                     <div>
-                      <dt className="text-gray-500">Username</dt>
-                      <dd className="font-mono text-gray-900">{profile.glpi_username}</dd>
+                      <dt className="text-gray-500">GLPI login (email)</dt>
+                      <dd className="font-mono text-gray-900">
+                        {profile.glpi_username || profile.staff_user.email}
+                      </dd>
                     </div>
                     <div>
                       <dt className="text-gray-500">User id</dt>
@@ -166,7 +171,7 @@ export default function StaffDetailPage() {
                       </div>
                     )}
                     <div>
-                      <dt className="text-gray-500">Login</dt>
+                      <dt className="text-gray-500">Login URL</dt>
                       <dd>
                         <a
                           href={glpiLoginUrl()}
@@ -180,16 +185,39 @@ export default function StaffDetailPage() {
                     </div>
                   </dl>
                 ) : (
-                  <p className="text-sm text-gray-600">
-                    Not linked to GLPI yet. Provision a login so this person can open the
-                    engine UI.
-                  </p>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <p>
+                      Not linked to GLPI yet. Provision a login so this person can open the
+                      engine UI.
+                    </p>
+                    {profile.staff_user.email ? (
+                      <p>
+                        They will sign in to GLPI with their email:{' '}
+                        <span className="font-mono text-gray-900">
+                          {profile.staff_user.email}
+                        </span>
+                      </p>
+                    ) : (
+                      <p className="text-amber-700">
+                        This account has no email. Add an email before provisioning so they
+                        can use it as their GLPI login.
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {shownGlpiPassword && (
                   <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm">
                     <p className="font-medium text-amber-900">Generated GLPI password (once):</p>
                     <p className="font-mono text-amber-950 mt-1">{shownGlpiPassword}</p>
+                    {(profile.glpi_username || profile.staff_user.email) && (
+                      <p className="mt-2 text-amber-900">
+                        Login with{' '}
+                        <span className="font-mono">
+                          {profile.glpi_username || profile.staff_user.email}
+                        </span>
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -202,24 +230,26 @@ export default function StaffDetailPage() {
                       placeholder="Optional GLPI password (auto-generate if blank)"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm focus:ring-admin focus:border-admin"
                     />
-                    <button
-                      type="button"
-                      disabled={isProvisioning}
-                      onClick={handleProvision}
-                      className="px-4 py-2 bg-admin text-white rounded-lg hover:bg-admin-600 disabled:opacity-50"
-                    >
-                      {isProvisioning
-                        ? 'Provisioning…'
-                        : profile.glpi_user_id
-                          ? 'Re-sync GLPI profile'
-                          : 'Provision GLPI account'}
-                    </button>
                     {!profile.role?.glpi_profile_name && (
                       <p className="text-xs text-amber-600">
                         Role has no glpi_profile_name — set one on the role (e.g. Technician)
                         before provisioning, or it will fail.
                       </p>
                     )}
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        disabled={isProvisioning || (!profile.glpi_user_id && !profile.staff_user.email)}
+                        onClick={handleProvision}
+                        className="px-4 py-2 bg-admin text-white rounded-lg hover:bg-admin-600 disabled:opacity-50"
+                      >
+                        {isProvisioning
+                          ? 'Provisioning…'
+                          : profile.glpi_user_id
+                            ? 'Re-sync GLPI profile'
+                            : 'Provision GLPI account'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

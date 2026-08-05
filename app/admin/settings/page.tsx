@@ -133,7 +133,7 @@ export default function SettingsPage() {
     return (
       <AdminProtectedRoute>
         <AdminLayout>
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full">
             <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
               <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
                 <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,7 +154,7 @@ export default function SettingsPage() {
   return (
     <AdminProtectedRoute>
       <AdminLayout>
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Platform Settings</h1>
             <p className="mt-2 text-sm text-gray-600">
@@ -337,7 +337,7 @@ export default function SettingsPage() {
                     </div>
 
                     {canManageSettings && (
-                      <div className="pt-4 border-t border-gray-200">
+                      <div className="pt-4 border-t border-gray-200 flex justify-end">
                         <button
                           type="submit"
                           disabled={isSaving}

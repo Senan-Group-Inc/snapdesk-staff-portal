@@ -42,6 +42,7 @@ class StaffService {
    */
   async listPermissions(params?: {
     page?: number;
+    count?: number;
   }): Promise<PaginatedStaffPermissionsResponse> {
     const response = await staffApiClient.get<PaginatedStaffPermissionsResponse>(
       `${this.basePath}/permissions`,
@@ -121,6 +122,7 @@ class StaffService {
     name?: string;
     permission?: number;
     page?: number;
+    count?: number;
   }): Promise<PaginatedStaffRolesResponse> {
     const response = await staffApiClient.get<PaginatedStaffRolesResponse>(
       `${this.basePath}/roles`,
@@ -225,6 +227,7 @@ class StaffService {
     search?: string;
     permission?: number;
     page?: number;
+    count?: number;
   }): Promise<PaginatedStaffProfilesResponse> {
     const response = await staffApiClient.get<PaginatedStaffProfilesResponse>(
       `${this.basePath}/profiles`,

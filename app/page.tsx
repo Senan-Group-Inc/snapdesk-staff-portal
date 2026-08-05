@@ -17,7 +17,7 @@ export default function StaffHomePage() {
 
     if (onAdminHost) {
       if (staffAuthService.isAuthenticated()) {
-        router.replace('/admin/organisations');
+        router.replace('/admin/dashboard');
       } else {
         router.replace('/admin/login');
       }
@@ -25,7 +25,7 @@ export default function StaffHomePage() {
     }
 
     if (staffAuthService.isAuthenticated()) {
-      router.replace('/admin/organisations');
+      router.replace('/admin/dashboard');
     } else {
       router.replace('/admin/login');
     }

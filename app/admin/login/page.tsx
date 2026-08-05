@@ -56,8 +56,8 @@ export default function AdminLoginPage() {
       });
       setUser(userData);
       toast.success('Welcome back');
-      router.prefetch('/admin/organisations');
-      router.push('/admin/organisations');
+      router.prefetch('/admin/dashboard');
+      router.push('/admin/dashboard');
     } catch (error: any) {
       toast.error(handleApiError(error));
     } finally {
@@ -241,18 +241,18 @@ export default function AdminLoginPage() {
                 </div>
               </div>
 
-              <div className="flex space-x-3 pt-2">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="flex-1 px-4 py-4 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  className="px-4 py-4 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors min-h-[44px]"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 px-4 py-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-admin hover:bg-admin-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="px-6 py-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-admin hover:bg-admin-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[44px]"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">

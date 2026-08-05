@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminProtectedRoute from '@/components/AdminProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
+import DataTable, { type DataTableColumn } from '@/components/DataTable';
 import { useStaffAuth } from '@/hooks/useStaffAuth';
 import { hasStaffPermission, STAFF_PERMISSIONS } from '@/utils/staff-permissions';
 import staffService from '@/services/staff.service';
-import { StaffRoleList, StaffRoleDetail, PaginatedStaffRolesResponse } from '@/types';
+import { StaffRoleList } from '@/types';
 import { handleApiError } from '@/utils/error-handler';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -16,78 +17,107 @@ export default function StaffRolesPage() {
   const router = useRouter();
   const { user } = useStaffAuth();
   const canViewRoles = hasStaffPermission(user, STAFF_PERMISSIONS.VIEW_STAFF_ROLES);
-  const canManageRoles = hasStaffPermission(user, STAFF_PERMISSIONS.MANAGE_STAFF_ROLES);
   const canCreateRoles = hasStaffPermission(user, STAFF_PERMISSIONS.CREATE_STAFF_ROLES);
-  const canUpdateRoles = hasStaffPermission(user, STAFF_PERMISSIONS.UPDATE_STAFF_ROLES);
   const canDeleteRoles = hasStaffPermission(user, STAFF_PERMISSIONS.DELETE_STAFF_ROLES);
   const [roles, setRoles] = useState<StaffRoleList[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [pagination, setPagination] = useState({
-    count: 0,
-    total_pages: 1,
-    current_page: 1,
-  });
 
-  useEffect(() => {
-    if (canViewRoles) {
-      fetchRoles();
-    }
-  }, [pagination.current_page, searchTerm, canViewRoles]);
-
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params: any = {
-        page: pagination.current_page,
-      };
-      
-      if (searchTerm) {
-        params.name = searchTerm;
-      }
-
-      const response = await staffService.listRoles(params);
+      const response = await staffService.listRoles({ page: 1, count: 500 });
       setRoles(response.data);
-      setPagination({
-        count: response.count,
-        total_pages: response.total_pages,
-        current_page: pagination.current_page,
-      });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(handleApiError(error));
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Are you sure you want to delete the role "${name}"? This action cannot be undone.`)) {
-      return;
-    }
+  useEffect(() => {
+    if (canViewRoles) fetchRoles();
+    else setIsLoading(false);
+  }, [canViewRoles, fetchRoles]);
 
+  const columns = useMemo<DataTableColumn<StaffRoleList>[]>(
+    () => [
+      {
+        id: 'name',
+        header: 'Role Name',
+        accessor: (r) => r.name,
+        cell: (r) => <span className="font-medium text-gray-900">{r.name}</span>,
+      },
+      {
+        id: 'description',
+        header: 'Description',
+        accessor: (r) => r.description || '',
+        cell: (r) => r.description || <span className="text-gray-400">No description</span>,
+      },
+      {
+        id: 'glpi',
+        header: 'GLPI profile',
+        accessor: (r) => r.glpi_profile_name || 'None',
+        filterable: true,
+        cell: (r) =>
+          r.glpi_profile_name ? (
+            <span className="font-mono text-gray-700">{r.glpi_profile_name}</span>
+          ) : (
+            <span className="text-gray-400">None</span>
+          ),
+      },
+      {
+        id: 'permissions',
+        header: 'Permissions',
+        accessor: (r) => String(r.permissions_count),
+        cell: (r) => (
+          <span className="text-gray-500">
+            {r.permissions_count} permission{r.permissions_count !== 1 ? 's' : ''}
+          </span>
+        ),
+      },
+      {
+        id: 'staff',
+        header: 'Staff Members',
+        accessor: (r) => String(r.staff_count),
+        cell: (r) => (
+          <span className="text-gray-500">
+            {r.staff_count} member{r.staff_count !== 1 ? 's' : ''}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
+
+  const handleDeleteSelected = async (rows: StaffRoleList[]) => {
     try {
-      await staffService.deleteRole(id);
-      toast.success('Role deleted successfully');
-      fetchRoles();
-    } catch (error: any) {
+      await Promise.all(rows.map((r) => staffService.deleteRole(r.id)));
+      toast.success(`Deleted ${rows.length} role${rows.length === 1 ? '' : 's'}.`);
+      await fetchRoles();
+    } catch (error: unknown) {
       toast.error(handleApiError(error));
+      await fetchRoles();
     }
   };
+
+  const createButton = canCreateRoles ? (
+    <Link
+      href="/admin/staff/roles/new"
+      className="px-4 py-2.5 bg-admin text-white rounded-lg hover:bg-admin-600 transition-colors font-medium text-sm min-h-[44px] inline-flex items-center"
+    >
+      + Create Role
+    </Link>
+  ) : null;
 
   if (!canViewRoles) {
     return (
       <AdminProtectedRoute>
         <AdminLayout>
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-              <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
-                <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
+          <div className="w-full">
+            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
               <p className="text-sm text-gray-500">
-                You don't have permission to view staff roles.
+                You don&apos;t have permission to view staff roles.
               </p>
             </div>
           </div>
@@ -99,178 +129,33 @@ export default function StaffRolesPage() {
   return (
     <AdminProtectedRoute>
       <AdminLayout>
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Staff Roles</h1>
-                <p className="mt-2 text-sm text-gray-600">
-                  Manage roles and their permissions for staff members
-                </p>
-              </div>
-              {canCreateRoles && (
-                <Link
-                  href="/admin/staff/roles/new"
-                  className="px-4 py-2 bg-admin text-white rounded-lg hover:bg-admin-600 transition-colors font-medium"
-                >
-                  + Create Role
-                </Link>
-              )}
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="mb-6">
-            <div className="relative max-w-md">
-              <input
-                type="text"
-                placeholder="Search roles..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setPagination({ ...pagination, current_page: 1 });
-                }}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Roles List */}
-          {isLoading ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-admin"></div>
-              <p className="mt-4 text-sm text-gray-500">Loading roles...</p>
-            </div>
-          ) : roles.length === 0 ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-              <div className="inline-block p-4 bg-gray-100 rounded-full mb-4">
-                <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Roles Found</h3>
-              <p className="text-sm text-gray-500">
-                {searchTerm ? 'No roles match your search.' : 'No roles have been created yet.'}
+        <div className="w-full space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Staff Roles</h1>
+              <p className="mt-2 text-sm text-gray-600">
+                Manage roles and their permissions for staff members
               </p>
             </div>
-          ) : (
-            <>
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Role Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Description
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        GLPI profile
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Permissions
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Staff Members
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {roles.map((role) => (
-                      <tr key={role.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{role.name}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-500">
-                            {role.description || <span className="text-gray-400">No description</span>}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {role.glpi_profile_name ? (
-                            <span className="text-sm font-mono text-gray-700">
-                              {role.glpi_profile_name}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-gray-400">—</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-500">
-                            {role.permissions_count} permission{role.permissions_count !== 1 ? 's' : ''}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-500">
-                            {role.staff_count} member{role.staff_count !== 1 ? 's' : ''}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-3">
-                            <Link
-                              href={`/admin/staff/roles/${role.id}`}
-                              className="text-admin hover:text-admin-600"
-                            >
-                              {canUpdateRoles ? 'Edit' : 'View'}
-                            </Link>
-                            {canDeleteRoles && (
-                              <button
-                                onClick={() => handleDelete(role.id, role.name)}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            {createButton}
+          </div>
 
-              {/* Pagination */}
-              {pagination.total_pages > 1 && (
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="text-sm text-gray-500">
-                    Showing {roles.length} of {pagination.count} roles
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setPagination({ ...pagination, current_page: pagination.current_page - 1 })}
-                      disabled={pagination.current_page === 1}
-                      className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    >
-                      Previous
-                    </button>
-                    <span className="px-4 py-2 text-sm text-gray-700">
-                      Page {pagination.current_page} of {pagination.total_pages}
-                    </span>
-                    <button
-                      onClick={() => setPagination({ ...pagination, current_page: pagination.current_page + 1 })}
-                      disabled={pagination.current_page === pagination.total_pages}
-                      className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+          <DataTable
+            data={roles}
+            columns={columns}
+            getRowId={(r) => r.id}
+            isLoading={isLoading}
+            searchPlaceholder="Search roles…"
+            exportFilename="staff-roles"
+            selectable={canDeleteRoles}
+            onDeleteSelected={canDeleteRoles ? handleDeleteSelected : undefined}
+            onRowClick={(r) => router.push(`/admin/staff/roles/${r.id}`)}
+            emptyTitle="No roles found"
+            emptyDescription="Create a role to group staff permissions."
+            emptyAction={createButton}
+          />
         </div>
       </AdminLayout>
     </AdminProtectedRoute>
   );
 }
-

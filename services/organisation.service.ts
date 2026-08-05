@@ -20,6 +20,7 @@ class OrganisationService {
     plan?: 'free' | 'pro' | 'enterprise';
     portal_ready?: boolean;
     page?: number;
+    count?: number;
   }): Promise<PaginatedStaffOrganisationsResponse> {
     const response = await staffApiClient.get<PaginatedStaffOrganisationsResponse>(
       '/organisation/',
@@ -110,6 +111,22 @@ class OrganisationService {
       data
     );
     return response.data;
+  }
+
+  async deleteMembers(
+    orgId: number,
+    ids: number[]
+  ): Promise<{ deleted: number; skipped_owner: number; not_found: number[] }> {
+    const response = await staffApiClient.post<{
+      deleted: number;
+      skipped_owner: number;
+      not_found: number[];
+    }>(`/organisation/${orgId}/members/bulk-delete/`, { ids });
+    return response.data;
+  }
+
+  async deleteOrganisation(id: number): Promise<void> {
+    await staffApiClient.delete(`/organisation/${id}/`);
   }
 
   async listRoles(orgId: number): Promise<StaffOrganisationRole[]> {

@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminProtectedRoute from '@/components/AdminProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
+import DataTable, { type DataTableColumn } from '@/components/DataTable';
 import { useStaffAuth } from '@/hooks/useStaffAuth';
 import { hasAnyStaffPermission, STAFF_PERMISSIONS } from '@/utils/staff-permissions';
 import productModuleService from '@/services/product-module.service';
@@ -40,7 +41,6 @@ export default function ProductModulesPage() {
   const [editing, setEditing] = useState<ProductModule | null>(null);
   const [form, setForm] = useState<CreateProductModuleRequest & UpdateProductModuleRequest>(emptyCreate);
   const [saving, setSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -59,11 +59,8 @@ export default function ProductModulesPage() {
   }, []);
 
   useEffect(() => {
-    if (canView) {
-      load();
-    } else {
-      setIsLoading(false);
-    }
+    if (canView) load();
+    else setIsLoading(false);
   }, [canView, load]);
 
   const openCreate = () => {
@@ -130,28 +127,100 @@ export default function ProductModulesPage() {
     }
   };
 
-  const handleDelete = async (m: ProductModule) => {
-    if (!canMutate) return;
-    if (!window.confirm(`Remove catalog row for “${m.key}”? The API falls back to code defaults until re-seeded.`)) {
-      return;
-    }
-    setDeletingId(m.id);
+  const handleDeleteSelected = async (selected: ProductModule[]) => {
     try {
-      await productModuleService.deleteProductModule(m.id);
-      toast.success('Module row removed.');
+      await Promise.all(selected.map((m) => productModuleService.deleteProductModule(m.id)));
+      toast.success(`Removed ${selected.length} catalog row${selected.length === 1 ? '' : 's'}.`);
       await load();
     } catch (e: unknown) {
       toast.error(handleApiError(e));
-    } finally {
-      setDeletingId(null);
+      await load();
     }
   };
+
+  const columns = useMemo<DataTableColumn<ProductModule>[]>(
+    () => [
+      {
+        id: 'key',
+        header: 'Key',
+        accessor: (m) => m.key,
+        className: 'px-4 py-3 font-mono text-gray-900',
+      },
+      {
+        id: 'label',
+        header: 'Label',
+        accessor: (m) => m.label,
+      },
+      {
+        id: 'price',
+        header: 'Price / mo',
+        accessor: (m) => m.monthly_price,
+      },
+      {
+        id: 'order',
+        header: 'Order',
+        accessor: (m) => String(m.sort_order),
+      },
+      {
+        id: 'active',
+        header: 'Active',
+        accessor: (m) => (m.is_active ? 'Yes' : 'No'),
+        filterable: true,
+        cell: (m) => (
+          <span
+            className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+              m.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+            }`}
+          >
+            {m.is_active ? 'Yes' : 'No'}
+          </span>
+        ),
+      },
+      ...(canMutate
+        ? [
+            {
+              id: 'actions',
+              header: 'Actions',
+              accessor: () => '',
+              searchable: false,
+              filterable: false,
+              headerClassName:
+                'px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider',
+              className: 'px-4 py-3 text-right whitespace-nowrap',
+              cell: (m: ProductModule) => (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEdit(m);
+                  }}
+                  className="text-admin hover:text-admin-600 font-medium"
+                >
+                  Edit
+                </button>
+              ),
+            } satisfies DataTableColumn<ProductModule>,
+          ]
+        : []),
+    ],
+    [canMutate]
+  );
+
+  const addButton = canMutate ? (
+    <button
+      type="button"
+      onClick={openCreate}
+      className="px-4 py-2.5 bg-admin text-white rounded-lg hover:bg-admin-600 transition-colors font-medium text-sm min-h-[44px]"
+    >
+      + Add catalog row
+    </button>
+  ) : null;
 
   if (!canView) {
     return (
       <AdminProtectedRoute>
         <AdminLayout>
-          <div className="max-w-3xl mx-auto">
+          <div className="w-full">
             <h1 className="text-2xl font-bold text-gray-900">Product modules</h1>
             <p className="mt-2 text-gray-600">
               You do not have permission to view the product module catalog. Required:{' '}
@@ -167,115 +236,39 @@ export default function ProductModulesPage() {
   return (
     <AdminProtectedRoute>
       <AdminLayout>
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div className="w-full space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Product modules</h1>
               <p className="mt-2 text-sm text-gray-600">
                 Global catalog: labels, monthly price, sort order, and availability for tenant module pickers.
               </p>
             </div>
-            {canMutate && (
-              <button
-                type="button"
-                onClick={openCreate}
-                className="px-4 py-2 bg-admin text-white rounded-lg hover:bg-admin-600 transition-colors font-medium self-start"
-              >
-                + Add catalog row
-              </button>
-            )}
+            {addButton}
           </div>
 
-          {isLoading ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-admin" />
-              <p className="mt-4 text-gray-600">Loading modules…</p>
-            </div>
-          ) : rows.length === 0 ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-              <p className="text-gray-600">No catalog rows yet. Add rows for keys defined in the backend.</p>
-              {canMutate && (
-                <button
-                  type="button"
-                  onClick={openCreate}
-                  className="mt-4 px-4 py-2 text-admin border border-admin rounded-lg hover:bg-admin/10"
-                >
-                  Add first row
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Key
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Label
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Price / mo
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Order
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Active
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {rows.map((m) => (
-                    <tr key={m.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-mono text-gray-900">{m.key}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{m.label}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{m.monthly_price}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{m.sort_order}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-                            m.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-                          }`}
-                        >
-                          {m.is_active ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right text-sm space-x-3 whitespace-nowrap">
-                        {canMutate && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => openEdit(m)}
-                              className="text-admin hover:text-admin-600 font-medium"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              disabled={deletingId === m.id}
-                              onClick={() => handleDelete(m)}
-                              className="text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
-                            >
-                              {deletingId === m.id ? 'Removing…' : 'Remove'}
-                            </button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <DataTable
+            data={rows}
+            columns={columns}
+            getRowId={(m) => m.id}
+            isLoading={isLoading}
+            searchPlaceholder="Search modules…"
+            exportFilename="product-modules"
+            selectable={canMutate}
+            onDeleteSelected={canMutate ? handleDeleteSelected : undefined}
+            deleteLabel="Remove selected"
+            getDeleteConfirmMessage={(selected) =>
+              `Remove ${selected.length} catalog row${selected.length === 1 ? '' : 's'}? The API falls back to code defaults until re-seeded.`
+            }
+            onRowClick={canMutate ? openEdit : undefined}
+            emptyTitle="No catalog rows yet"
+            emptyDescription="Add rows for keys defined in the backend."
+            emptyAction={addButton}
+          />
 
           {modal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-              <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+              <div className="bg-white rounded-lg border border-gray-200 max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
                 <h2 className="text-lg font-semibold text-gray-900">
                   {modal === 'create' ? 'Add catalog row' : 'Edit catalog row'}
                 </h2>
@@ -293,7 +286,7 @@ export default function ProductModulesPage() {
                       value={form.key ?? ''}
                       onChange={(e) => setForm({ ...form, key: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin disabled:bg-gray-100 font-mono text-sm"
-                      placeholder="e.g. pm, hr, …"
+                      placeholder="e.g. pm, hr"
                     />
                   </div>
                   <div>
@@ -350,7 +343,7 @@ export default function ProductModulesPage() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 min-h-[44px]"
                   >
                     Cancel
                   </button>
@@ -358,7 +351,7 @@ export default function ProductModulesPage() {
                     type="button"
                     disabled={saving || !canMutate}
                     onClick={handleSubmit}
-                    className="px-4 py-2 text-sm font-medium text-white bg-admin rounded-lg hover:bg-admin-600 disabled:opacity-50"
+                    className="px-4 py-2.5 text-sm font-medium text-white bg-admin rounded-lg hover:bg-admin-600 disabled:opacity-50 min-h-[44px]"
                   >
                     {saving ? 'Saving…' : modal === 'create' ? 'Create' : 'Save'}
                   </button>

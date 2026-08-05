@@ -29,7 +29,7 @@ export function proxy(request: NextRequest) {
 
   if (pathname === '/') {
     const url = request.nextUrl.clone();
-    url.pathname = '/admin/organisations';
+    url.pathname = '/admin/dashboard';
     return NextResponse.redirect(url, 307);
   }
 

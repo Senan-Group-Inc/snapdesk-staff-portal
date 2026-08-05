@@ -15,6 +15,7 @@ import { CreateStaffOrganisationRequest, ProductModule } from '@/types';
 import { handleApiError } from '@/utils/error-handler';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { ModalSelect } from '@/components/ui';
 
 type Step = 1 | 2;
 
@@ -77,10 +78,9 @@ export default function NewOrganisationPage() {
   // Step 1: Validate and move to step 2
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate required fields
-    if (!ownerData.phone_number) {
-      toast.error('Phone number is required');
+
+    if (!ownerData.email?.trim()) {
+      toast.error('Owner email is required');
       return;
     }
 
@@ -106,10 +106,11 @@ export default function NewOrganisationPage() {
     setIsSaving(true);
     try {
       // Prepare the request data with owner_data
-      const cleanOwnerData: any = {
-        phone_number: ownerData.phone_number,
-      };
-      if (ownerData.email) cleanOwnerData.email = ownerData.email;
+      const cleanOwnerData: Record<string, string> = {};
+      if (ownerData.phone_number?.trim()) {
+        cleanOwnerData.phone_number = ownerData.phone_number.trim();
+      }
+      if (ownerData.email?.trim()) cleanOwnerData.email = ownerData.email.trim();
       if (ownerData.first_name) cleanOwnerData.first_name = ownerData.first_name;
       if (ownerData.last_name) cleanOwnerData.last_name = ownerData.last_name;
       if (ownerData.middle_name) cleanOwnerData.middle_name = ownerData.middle_name;
@@ -149,7 +150,7 @@ export default function NewOrganisationPage() {
   return (
     <AdminProtectedRoute>
       <AdminLayout>
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center space-x-4 mb-4">
@@ -226,7 +227,23 @@ export default function NewOrganisationPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number <span className="text-red-500">*</span>
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={ownerData.email}
+                    onChange={(e) => setOwnerData({ ...ownerData, email: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin"
+                    placeholder="owner@example.com"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Required for portal-ready emails. Phone is optional.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
                   </label>
                   <input
                     type="tel"
@@ -234,10 +251,9 @@ export default function NewOrganisationPage() {
                     onChange={(e) => setOwnerData({ ...ownerData, phone_number: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin"
                     placeholder="+1234567890"
-                    required
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Phone number must be unique across all accounts
+                    Optional. Must be unique if provided.
                   </p>
                 </div>
 
@@ -268,19 +284,6 @@ export default function NewOrganisationPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={ownerData.email}
-                    onChange={(e) => setOwnerData({ ...ownerData, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin"
-                    placeholder="owner@example.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Middle Name
                   </label>
                   <input
@@ -292,18 +295,20 @@ export default function NewOrganisationPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Gender
-                  </label>
-                  <select
+                  <ModalSelect
+                    label="Gender"
+                    labelVisible
                     value={ownerData.gender}
-                    onChange={(e) => setOwnerData({ ...ownerData, gender: e.target.value as 'male' | 'female' | '' })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin"
-                  >
-                    <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
+                    onChange={(v) =>
+                      setOwnerData({ ...ownerData, gender: v as 'male' | 'female' | '' })
+                    }
+                    placeholder="Select gender"
+                    options={[
+                      { value: '', label: 'Select gender' },
+                      { value: 'male', label: 'Male' },
+                      { value: 'female', label: 'Female' },
+                    ]}
+                  />
                 </div>
 
                 <div className="border-t border-gray-200 pt-4">
@@ -407,18 +412,22 @@ export default function NewOrganisationPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Plan
-                  </label>
-                  <select
-                    value={formData.plan}
-                    onChange={(e) => setFormData({ ...formData, plan: e.target.value as any })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin"
-                  >
-                    <option value="free">Free</option>
-                    <option value="pro">Pro</option>
-                    <option value="enterprise">Enterprise</option>
-                  </select>
+                  <ModalSelect
+                    label="Plan"
+                    labelVisible
+                    value={formData.plan || 'free'}
+                    onChange={(v) =>
+                      setFormData({
+                        ...formData,
+                        plan: v as 'free' | 'pro' | 'enterprise',
+                      })
+                    }
+                    options={[
+                      { value: 'free', label: 'Free' },
+                      { value: 'pro', label: 'Pro' },
+                      { value: 'enterprise', label: 'Enterprise' },
+                    ]}
+                  />
                 </div>
 
                 <div>

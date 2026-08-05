@@ -1013,7 +1013,7 @@ export interface StaffOrganisation {
 }
 
 export interface OwnerData {
-  phone_number: string;
+  phone_number?: string;
   email?: string;
   first_name?: string;
   last_name?: string;
@@ -1367,6 +1367,10 @@ export interface PlatformOverview {
     plan: string;
     count: number;
   }>;
+  portal_status?: {
+    ready: number;
+    not_ready: number;
+  };
 }
 
 export interface OrganisationAnalytics {

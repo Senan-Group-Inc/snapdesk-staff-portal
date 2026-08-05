@@ -14,6 +14,7 @@ import {
   ShieldCheckIcon,
   KeyIcon,
   ModuleGridIcon,
+  HomeIcon,
 } from './icons';
 
 interface NavItem {
@@ -23,9 +24,17 @@ interface NavItem {
   /** If set, user needs at least one of these permissions (or super_admin). */
   anyPermissions?: string[];
   permission?: string;
+  /** Match only this path (do not treat child routes as active). */
+  exact?: boolean;
 }
 
 const adminNavigation: NavItem[] = [
+  {
+    name: 'Dashboard',
+    href: '/admin/dashboard',
+    icon: HomeIcon,
+    exact: true,
+  },
   {
     name: 'Organizations',
     href: '/admin/organisations',
@@ -80,13 +89,6 @@ export default function AdminSidebar() {
   const { user, logout } = useStaffAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Debug: Log user and permissions
-  if (typeof window !== 'undefined' && user) {
-    console.log('AdminSidebar - User:', user);
-    console.log('AdminSidebar - Staff Profile:', user.staff_profile);
-    console.log('AdminSidebar - Permissions:', user.staff_profile?.permissions || user.permissions);
-  }
-
   return (
     <>
       {/* Mobile menu button */}
@@ -130,24 +132,33 @@ export default function AdminSidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {adminNavigation
-            .filter((item) => {
+          {(() => {
+            const visibleItems = adminNavigation.filter((item) => {
               if (item.anyPermissions?.length) {
                 return hasAnyStaffPermission(user, item.anyPermissions);
               }
               if (item.permission) {
-                const hasPermission = hasStaffPermission(user, item.permission);
-                if (typeof window !== 'undefined') {
-                  console.log(`AdminSidebar - Checking ${item.name} (${item.permission}):`, hasPermission);
-                }
-                return hasPermission;
+                return hasStaffPermission(user, item.permission);
               }
               return true;
-            })
-            .map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+            });
+
+            const matchesPath = (item: NavItem) => {
+              if (!pathname) return false;
+              if (item.exact) return pathname === item.href;
+              return pathname === item.href || pathname.startsWith(`${item.href}/`);
+            };
+
+            // Prefer the most specific (longest) matching href so /admin/staff/roles
+            // does not also light up Senan team (/admin/staff).
+            const activeHref = visibleItems
+              .filter(matchesPath)
+              .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+
+            return visibleItems.map((item) => {
+              const isActive = item.href === activeHref;
               const Icon = item.icon;
-              
+
               return (
                 <Link
                   key={item.name}
@@ -177,7 +188,8 @@ export default function AdminSidebar() {
                   {item.name}
                 </Link>
               );
-            })}
+            });
+          })()}
         </nav>
 
         {/* User Section */}

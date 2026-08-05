@@ -11,6 +11,7 @@ import { hasStaffPermission, STAFF_PERMISSIONS } from '@/utils/staff-permissions
 import staffService from '@/services/staff.service';
 import { StaffPermissionList } from '@/types';
 import { handleApiError } from '@/utils/error-handler';
+import { ModalSelect, Checkbox } from '@/components/ui';
 
 const GLPI_PROFILES = [
   '',
@@ -83,7 +84,7 @@ export default function NewStaffRolePage() {
     return (
       <AdminProtectedRoute>
         <AdminLayout>
-          <div className="max-w-3xl mx-auto bg-white rounded-xl border border-gray-100 p-12 text-center">
+          <div className="w-full bg-white rounded-xl border border-gray-100 p-12 text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
           </div>
         </AdminLayout>
@@ -94,7 +95,7 @@ export default function NewStaffRolePage() {
   return (
     <AdminProtectedRoute>
       <AdminLayout>
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full">
           <Link href="/admin/staff/roles" className="text-sm text-admin hover:text-admin-600">
             ← Back to roles
           </Link>
@@ -127,24 +128,21 @@ export default function NewStaffRolePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                GLPI profile
-              </label>
-              <select
+              <ModalSelect
+                label="GLPI profile"
+                labelVisible
                 value={form.glpi_profile_name}
-                onChange={(e) => setForm({ ...form, glpi_profile_name: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-admin focus:border-admin"
-              >
-                <option value="">None (skip GLPI provisioning)</option>
-                {GLPI_PROFILES.filter(Boolean).map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-gray-500">
-                Must match a profile name in GLPI Setup → Profiles (e.g. Technician).
-              </p>
+                onChange={(v) => setForm({ ...form, glpi_profile_name: v })}
+                placeholder="None (skip GLPI provisioning)"
+                hint="Must match a profile name in GLPI Setup → Profiles (e.g. Technician)."
+                options={[
+                  { value: '', label: 'None (skip GLPI provisioning)' },
+                  ...GLPI_PROFILES.filter(Boolean).map((name) => ({
+                    value: name,
+                    label: name,
+                  })),
+                ]}
+              />
             </div>
 
             <div>
@@ -155,11 +153,11 @@ export default function NewStaffRolePage() {
                     key={perm.id}
                     className="flex items-start gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer"
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={form.permission_ids.includes(perm.id)}
                       onChange={() => togglePermission(perm.id)}
-                      className="mt-1"
+                      size="sm"
+                      className="mt-0.5"
                     />
                     <span>
                       <span className="block text-sm font-medium text-gray-900">{perm.name}</span>
@@ -172,7 +170,13 @@ export default function NewStaffRolePage() {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex justify-end gap-3 pt-2">
+              <Link
+                href="/admin/staff/roles"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </Link>
               <button
                 type="submit"
                 disabled={isSaving}
@@ -180,12 +184,6 @@ export default function NewStaffRolePage() {
               >
                 {isSaving ? 'Creating…' : 'Create role'}
               </button>
-              <Link
-                href="/admin/staff/roles"
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </Link>
             </div>
           </form>
         </div>
