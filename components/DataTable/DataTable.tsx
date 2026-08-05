@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
-import { Checkbox, ModalSelect } from '@/components/ui';
+import { Checkbox, ConfirmModal, ModalSelect } from '@/components/ui';
 import { exportToCsv, exportToExcel, exportToPdf, rowsToExportMatrix } from './export';
 import type { DataTableColumn, DataTableProps } from './types';
 
@@ -47,6 +47,7 @@ export default function DataTable<T>({
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
   const [exportFormat, setExportFormat] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const filterableColumns = useMemo(
     () => columns.filter((c) => filterable && c.filterable === true),
@@ -136,16 +137,19 @@ export default function DataTable<T>({
     else if (format === 'pdf') exportToPdf(exportFilename, headers, body);
   };
 
+  const deleteConfirmMessage =
+    selectedRows.length === 0
+      ? ''
+      : getDeleteConfirmMessage?.(selectedRows) ??
+        `Delete ${selectedRows.length} selected item${selectedRows.length === 1 ? '' : 's'}? This cannot be undone.`;
+
   const handleDelete = async () => {
     if (!onDeleteSelected || selectedRows.length === 0) return;
-    const message =
-      getDeleteConfirmMessage?.(selectedRows) ??
-      `Delete ${selectedRows.length} selected item${selectedRows.length === 1 ? '' : 's'}? This cannot be undone.`;
-    if (!window.confirm(message)) return;
     setDeleting(true);
     try {
       await onDeleteSelected(selectedRows);
       setSelectedIds(new Set());
+      setDeleteConfirmOpen(false);
     } finally {
       setDeleting(false);
     }
@@ -235,7 +239,7 @@ export default function DataTable<T>({
                 <button
                   type="button"
                   disabled={deleting}
-                  onClick={handleDelete}
+                  onClick={() => setDeleteConfirmOpen(true)}
                   className="px-3 py-2.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 min-h-[44px]"
                 >
                   {deleting ? 'Deleting…' : `${deleteLabel} (${selectedRows.length})`}
@@ -343,6 +347,21 @@ export default function DataTable<T>({
           {footer}
         </>
       )}
+
+      <ConfirmModal
+        open={deleteConfirmOpen}
+        onClose={() => {
+          if (!deleting) setDeleteConfirmOpen(false);
+        }}
+        onConfirm={handleDelete}
+        title="Delete selected"
+        description="This cannot be undone."
+        confirmLabel={deleteLabel}
+        variant="danger"
+        busy={deleting}
+      >
+        <p className="text-sm text-gray-700">{deleteConfirmMessage}</p>
+      </ConfirmModal>
     </div>
   );
 }

@@ -10,6 +10,8 @@ export type ModalProps = {
   children: ReactNode;
   footer?: ReactNode;
   description?: string;
+  /** Shorter body for confirm dialogs (default content pickers keep the taller body). */
+  compact?: boolean;
 };
 
 /**
@@ -23,6 +25,7 @@ export default function Modal({
   description,
   children,
   footer,
+  compact = false,
 }: ModalProps) {
   const titleId = useId();
   const [mounted, setMounted] = useState(false);
@@ -97,7 +100,11 @@ export default function Modal({
           {description && <p className="mt-1.5 text-sm text-gray-600">{description}</p>}
         </div>
 
-        <div className="px-6 py-4 overflow-y-auto flex-1 min-h-[12rem]">{children}</div>
+        <div
+          className={`px-6 py-4 overflow-y-auto flex-1 ${compact ? 'min-h-0' : 'min-h-[12rem]'}`}
+        >
+          {children}
+        </div>
 
         {footer != null && (
           <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2 shrink-0 bg-white rounded-b-xl">
