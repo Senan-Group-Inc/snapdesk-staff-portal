@@ -991,6 +991,9 @@ export interface StaffOrganisation {
   plan: 'free' | 'pro' | 'enterprise';
   settings?: Record<string, any>;
   email_domain?: string | null;
+  /** Single auth method (API). Prefer this over allowed_auth_methods. */
+  auth_method?: 'local' | 'google' | 'microsoft';
+  /** @deprecated Use auth_method — kept for older API responses */
   allowed_auth_methods?: string[];
   /** Module keys enabled for this org, or null/omitted for “all modules”. Staff-only. */
   enabled_modules?: string[] | null;
@@ -999,6 +1002,11 @@ export interface StaffOrganisation {
   owner?: number | null;
   owner_details?: OwnerDetails | null;
   employee_count?: number;
+  portal_ready?: boolean;
+  portal_ready_at?: string | null;
+  portal_welcome_sent_at?: string | null;
+  portal_url?: string;
+  portal_email_recipient_count?: number;
   created: string;
   updated: string;
   deleted?: string | null;
@@ -1022,7 +1030,7 @@ export interface CreateStaffOrganisationRequest {
   plan?: 'free' | 'pro' | 'enterprise';
   settings?: Record<string, any>;
   email_domain?: string | null;
-  allowed_auth_methods?: string[];
+  auth_method?: 'local' | 'google' | 'microsoft';
   owner?: number; // ID of existing Account with account_type="business_owner"
   owner_data?: OwnerData; // Data to create a new owner account
   country?: string; // For organization address
@@ -1037,10 +1045,54 @@ export interface UpdateStaffOrganisationRequest {
   plan?: 'free' | 'pro' | 'enterprise';
   settings?: Record<string, any>;
   email_domain?: string | null;
-  allowed_auth_methods?: string[];
+  auth_method?: 'local' | 'google' | 'microsoft';
   owner?: number; // ID of existing Account with account_type="business_owner" to assign as owner (can change owner)
   /** Pass null to allow all catalog modules; omit to leave unchanged on PATCH. */
   enabled_modules?: string[] | null;
+}
+
+export interface StaffOrganisationMember {
+  id: number;
+  account_id: number;
+  account_email?: string | null;
+  account_phone?: string | null;
+  account_name?: string;
+  position?: string;
+  department?: string | null;
+  role_id?: number | null;
+  role_name?: string | null;
+  date_hired?: string | null;
+  created: string;
+  updated: string;
+  portal_email_sent?: boolean;
+  portal_email_error?: string;
+}
+
+export interface CreateStaffOrganisationMemberRequest {
+  email: string;
+  phone_number?: string;
+  first_name?: string;
+  last_name?: string;
+  middle_name?: string;
+  role_id?: number | null;
+  position?: string;
+  department?: string;
+}
+
+export interface StaffOrganisationRole {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface MarkPortalReadyResponse extends StaffOrganisation {
+  email_result?: {
+    sent: number;
+    failed: { email: string; message: string }[];
+    total: number;
+    portal_url: string;
+  };
+  already_ready?: boolean;
 }
 
 /** Staff catalog row: GET/POST/PATCH /api/v1/staff/product-modules/ */

@@ -4,16 +4,18 @@ import {
   CreateStaffOrganisationRequest,
   UpdateStaffOrganisationRequest,
   PaginatedStaffOrganisationsResponse,
+  StaffOrganisationMember,
+  CreateStaffOrganisationMemberRequest,
+  StaffOrganisationRole,
+  MarkPortalReadyResponse,
 } from '@/types';
 
 class OrganisationService {
-  /**
-   * List all organizations (with optional filters)
-   */
   async listOrganisations(params?: {
     name?: string;
     subdomain?: string;
     plan?: 'free' | 'pro' | 'enterprise';
+    portal_ready?: boolean;
     page?: number;
   }): Promise<PaginatedStaffOrganisationsResponse> {
     const response = await staffApiClient.get<PaginatedStaffOrganisationsResponse>(
@@ -23,17 +25,11 @@ class OrganisationService {
     return response.data;
   }
 
-  /**
-   * Get organization details by ID
-   */
   async getOrganisation(id: number): Promise<StaffOrganisation> {
-    const response = await staffApiClient.get<StaffOrganisation>(`/organisation/${id}`);
+    const response = await staffApiClient.get<StaffOrganisation>(`/organisation/${id}/`);
     return response.data;
   }
 
-  /**
-   * Get organization details (alternative endpoint)
-   */
   async getOrganisationDetails(id: number): Promise<StaffOrganisation> {
     const response = await staffApiClient.get<StaffOrganisation>(
       `/organisation/${id}/details/`
@@ -41,26 +37,13 @@ class OrganisationService {
     return response.data;
   }
 
-  /**
-   * Create a new organization
-   * 
-   * Response includes:
-   * - id, name, subdomain, email, plan, settings, etc.
-   * - owner: ID of owner account (null if no owner)
-   * - owner_details: Full owner account details object (null if no owner)
-   * - employee_count: Number of employees in the organization
-   */
   async createOrganisation(
     data: CreateStaffOrganisationRequest
   ): Promise<StaffOrganisation> {
     const response = await staffApiClient.post<StaffOrganisation>('/organisation/', data);
-    // The response.data should contain the organization object directly
     return response.data;
   }
 
-  /**
-   * Update organization (partial update)
-   */
   async updateOrganisation(
     id: number,
     data: UpdateStaffOrganisationRequest
@@ -72,9 +55,6 @@ class OrganisationService {
     return response.data;
   }
 
-  /**
-   * Update organization (full update)
-   */
   async updateOrganisationFull(
     id: number,
     data: UpdateStaffOrganisationRequest
@@ -82,6 +62,56 @@ class OrganisationService {
     const response = await staffApiClient.put<StaffOrganisation>(
       `/organisation/${id}/`,
       data
+    );
+    return response.data;
+  }
+
+  async markPortalReady(id: number): Promise<MarkPortalReadyResponse> {
+    const response = await staffApiClient.post<MarkPortalReadyResponse>(
+      `/organisation/${id}/mark-portal-ready/`
+    );
+    return response.data;
+  }
+
+  async unmarkPortalReady(id: number): Promise<StaffOrganisation> {
+    const response = await staffApiClient.post<StaffOrganisation>(
+      `/organisation/${id}/unmark-portal-ready/`
+    );
+    return response.data;
+  }
+
+  async resendPortalEmail(
+    id: number,
+    include: 'all' | 'owner' = 'all'
+  ): Promise<MarkPortalReadyResponse> {
+    const response = await staffApiClient.post<MarkPortalReadyResponse>(
+      `/organisation/${id}/resend-portal-email/`,
+      { include }
+    );
+    return response.data;
+  }
+
+  async listMembers(orgId: number): Promise<StaffOrganisationMember[]> {
+    const response = await staffApiClient.get<StaffOrganisationMember[]>(
+      `/organisation/${orgId}/members/`
+    );
+    return response.data;
+  }
+
+  async createMember(
+    orgId: number,
+    data: CreateStaffOrganisationMemberRequest
+  ): Promise<StaffOrganisationMember> {
+    const response = await staffApiClient.post<StaffOrganisationMember>(
+      `/organisation/${orgId}/members/`,
+      data
+    );
+    return response.data;
+  }
+
+  async listRoles(orgId: number): Promise<StaffOrganisationRole[]> {
+    const response = await staffApiClient.get<StaffOrganisationRole[]>(
+      `/organisation/${orgId}/roles/`
     );
     return response.data;
   }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import AdminProtectedRoute from '@/components/AdminProtectedRoute';
 import AdminLayout from '@/components/AdminLayout';
 import { useStaffAuth } from '@/hooks/useStaffAuth';
@@ -13,13 +12,13 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function OrganisationsPage() {
-  const router = useRouter();
   const { user } = useStaffAuth();
   const canCreateOrganisations = hasStaffPermission(user, STAFF_PERMISSIONS.CREATE_ORGANISATIONS);
   const [organisations, setOrganisations] = useState<StaffOrganisation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPlan, setFilterPlan] = useState<'free' | 'pro' | 'enterprise' | ''>('');
+  const [filterPortalReady, setFilterPortalReady] = useState<'' | 'true' | 'false'>('');
   const [pagination, setPagination] = useState({
     count: 0,
     total_pages: 1,
@@ -28,31 +27,43 @@ export default function OrganisationsPage() {
 
   useEffect(() => {
     fetchOrganisations();
-  }, [pagination.current_page, searchTerm, filterPlan]);
+  }, [pagination.current_page, searchTerm, filterPlan, filterPortalReady]);
 
   const fetchOrganisations = async () => {
     setIsLoading(true);
     try {
-      const params: any = {
+      const params: {
+        page: number;
+        name?: string;
+        plan?: 'free' | 'pro' | 'enterprise';
+        portal_ready?: boolean;
+      } = {
         page: pagination.current_page,
       };
-      
+
       if (searchTerm) {
         params.name = searchTerm;
       }
-      
+
       if (filterPlan) {
         params.plan = filterPlan;
       }
 
-      const response = await organisationService.listOrganisations(params);
+      if (filterPortalReady === 'true') {
+        params.portal_ready = true;
+      } else if (filterPortalReady === 'false') {
+        params.portal_ready = false;
+      }
+
+      const response: PaginatedStaffOrganisationsResponse =
+        await organisationService.listOrganisations(params);
       setOrganisations(response.data);
       setPagination({
         count: response.count,
         total_pages: response.total_pages,
         current_page: pagination.current_page,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(handleApiError(error));
     } finally {
       setIsLoading(false);
@@ -76,17 +87,14 @@ export default function OrganisationsPage() {
     <AdminProtectedRoute>
       <AdminLayout>
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Organizations</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Manage all organizations on the platform
+              Manage tenant organizations. Mark a portal ready when DNS/hosting is live, then emails go out.
             </p>
           </div>
-          {/* Actions Bar */}
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              {/* Search */}
               <div className="relative flex-1 max-w-md">
                 <input
                   type="text"
@@ -105,11 +113,10 @@ export default function OrganisationsPage() {
                 </div>
               </div>
 
-              {/* Plan Filter */}
               <select
                 value={filterPlan}
                 onChange={(e) => {
-                  setFilterPlan(e.target.value as any);
+                  setFilterPlan(e.target.value as '' | 'free' | 'pro' | 'enterprise');
                   setPagination({ ...pagination, current_page: 1 });
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin"
@@ -119,9 +126,21 @@ export default function OrganisationsPage() {
                 <option value="pro">Pro</option>
                 <option value="enterprise">Enterprise</option>
               </select>
+
+              <select
+                value={filterPortalReady}
+                onChange={(e) => {
+                  setFilterPortalReady(e.target.value as '' | 'true' | 'false');
+                  setPagination({ ...pagination, current_page: 1 });
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin"
+              >
+                <option value="">All portal status</option>
+                <option value="true">Portal ready</option>
+                <option value="false">Not ready</option>
+              </select>
             </div>
 
-            {/* Create Button */}
             {canCreateOrganisations && (
               <Link
                 href="/admin/organisations/new"
@@ -132,7 +151,6 @@ export default function OrganisationsPage() {
             )}
           </div>
 
-          {/* Organisations List */}
           {isLoading ? (
             <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-admin"></div>
@@ -153,6 +171,9 @@ export default function OrganisationsPage() {
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Subdomain
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Portal
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Plan
@@ -176,6 +197,17 @@ export default function OrganisationsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-500">{org.subdomain}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {org.portal_ready ? (
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                              Ready
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
+                              Not ready
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getPlanBadgeColor(org.plan)}`}>
@@ -204,7 +236,6 @@ export default function OrganisationsPage() {
                 </table>
               </div>
 
-              {/* Pagination */}
               {pagination.total_pages > 1 && (
                 <div className="mt-6 flex items-center justify-between">
                   <div className="text-sm text-gray-700">
@@ -235,4 +266,3 @@ export default function OrganisationsPage() {
     </AdminProtectedRoute>
   );
 }
-

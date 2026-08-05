@@ -44,7 +44,7 @@ export default function NewOrganisationPage() {
     plan: 'free',
     settings: {},
     email_domain: null,
-    allowed_auth_methods: ['local'],
+    auth_method: 'local',
     country: '',
     address_line_1: '',
   });
@@ -135,7 +135,9 @@ export default function NewOrganisationPage() {
         return;
       }
       
-      toast.success('Organization created successfully!');
+      toast.success(
+        'Organization created. Mark the portal ready when DNS/hosting is live — then we email them the portal URL.'
+      );
       router.push(`/admin/organisations/${organisation.id}`);
     } catch (error: any) {
       toast.error(handleApiError(error));
@@ -434,23 +436,17 @@ export default function NewOrganisationPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Allowed Auth Methods
+                    Auth method
                   </label>
                   <div className="space-y-2">
-                    {['local', 'google', 'microsoft'].map((method) => (
+                    {(['local', 'google', 'microsoft'] as const).map((method) => (
                       <label key={method} className="flex items-center">
                         <input
-                          type="checkbox"
-                          checked={formData.allowed_auth_methods?.includes(method)}
-                          onChange={(e) => {
-                            const methods = formData.allowed_auth_methods || [];
-                            if (e.target.checked) {
-                              setFormData({ ...formData, allowed_auth_methods: [...methods, method] });
-                            } else {
-                              setFormData({ ...formData, allowed_auth_methods: methods.filter(m => m !== method) });
-                            }
-                          }}
-                          className="rounded border-gray-300 text-admin focus:ring-admin"
+                          type="radio"
+                          name="auth_method"
+                          checked={formData.auth_method === method}
+                          onChange={() => setFormData({ ...formData, auth_method: method })}
+                          className="border-gray-300 text-admin focus:ring-admin"
                         />
                         <span className="ml-2 text-sm text-gray-700 capitalize">{method}</span>
                       </label>
