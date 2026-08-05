@@ -119,7 +119,8 @@ export default function NewStaffPage() {
             <h1 className="mt-3 text-3xl font-bold text-gray-900">Add Staff Member</h1>
             <p className="mt-2 text-sm text-gray-600">
               Creates a SnapDesk staff account and optionally a matching GLPI login
-              so tech can sign into the engine UI.
+              so tech can sign into the engine UI. You can also promote an existing
+              organisation member by using their email.
             </p>
           </div>
 
@@ -206,6 +207,10 @@ export default function NewStaffPage() {
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-admin focus:border-admin"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  If this email already belongs to an organisation member, they are elevated to
+                  staff and keep client portal access.
+                </p>
               </div>
 
               <div>

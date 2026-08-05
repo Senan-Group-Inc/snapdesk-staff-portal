@@ -123,7 +123,8 @@ export default function NewOrganisationMemberPage() {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Add client portal user</h1>
                 <p className="mt-2 text-sm text-gray-600">
-                  {organisation?.name || 'Organization'} · seeds a tenant login for the client portal
+                  {organisation?.name || 'Organization'} · seeds a tenant login for the client
+                  portal. Existing Senan staff can be added with the same email.
                 </p>
               </div>
             </div>
@@ -148,6 +149,10 @@ export default function NewOrganisationMemberPage() {
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-admin focus:border-admin"
                   />
+                  <p className="mt-1 text-xs text-gray-500">
+                    If this email is already Senan staff, they are linked into this organisation
+                    (they keep both staff and portal access).
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
