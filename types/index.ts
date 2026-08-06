@@ -919,6 +919,13 @@ export interface StaffLoginRequest {
   code: string;
 }
 
+/** Response from GET /api/v1/staff/auth/account/login-options */
+export interface StaffLoginOptionsResponse {
+  auth_method: 'local' | 'microsoft';
+  auth_url: string | null;
+  state: string | null;
+}
+
 export interface StaffUserResponse extends StaffUser {}
 
 // Staff Profile and Permissions Types

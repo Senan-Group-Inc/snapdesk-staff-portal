@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import staffAuthService from '@/services/staff-auth.service';
 import { useStaffAuthStore } from '@/store/staff-auth-store';
 import { handleApiError } from '@/utils/error-handler';
 import toast from 'react-hot-toast';
+import type { StaffLoginOptionsResponse } from '@/types';
+
+const OAUTH_PROVIDER_KEY = 'staff_oauth_provider';
 
 interface LoginFormData {
   email: string;
@@ -20,6 +23,8 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingCode, setIsSendingCode] = useState(false);
+  const [loginOptions, setLoginOptions] = useState<StaffLoginOptionsResponse | null>(null);
+  const [microsoftLoading, setMicrosoftLoading] = useState(false);
 
   const {
     register,
@@ -27,6 +32,31 @@ export default function AdminLoginPage() {
     formState: { errors },
     setValue,
   } = useForm<LoginFormData>();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const options = await staffAuthService.getLoginOptions();
+        if (!cancelled) setLoginOptions(options);
+      } catch {
+        if (!cancelled) setLoginOptions({ auth_method: 'local', auth_url: null, state: null });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const microsoftAvailable =
+    loginOptions?.auth_method === 'microsoft' && Boolean(loginOptions.auth_url);
+
+  const handleMicrosoftSignIn = () => {
+    if (!loginOptions?.auth_url) return;
+    setMicrosoftLoading(true);
+    sessionStorage.setItem(OAUTH_PROVIDER_KEY, 'microsoft');
+    window.location.href = loginOptions.auth_url;
+  };
 
   // Step 1: Email and send verification code
   const handleEmailSubmit = async (data: { email: string }) => {
@@ -39,7 +69,7 @@ export default function AdminLoginPage() {
       setValue('email', data.email);
       toast.success('Verification code sent to your email!');
       setCurrentStep(2);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(handleApiError(error));
     } finally {
       setIsSendingCode(false);
@@ -58,7 +88,7 @@ export default function AdminLoginPage() {
       toast.success('Welcome back');
       router.prefetch('/admin/dashboard');
       router.push('/admin/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(handleApiError(error));
     } finally {
       setIsLoading(false);
@@ -81,6 +111,35 @@ export default function AdminLoginPage() {
 
         {/* Login Card */}
         <div className="bg-white rounded-2xl border border-gray-200 p-10 sm:p-12">
+          {microsoftAvailable && currentStep === 1 && (
+            <div className="mb-8">
+              <button
+                type="button"
+                onClick={handleMicrosoftSignIn}
+                disabled={microsoftLoading}
+                className="w-full flex items-center justify-center gap-3 py-4 px-4 border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-admin transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 21 21" aria-hidden="true">
+                  <rect x="1" y="1" width="9" height="9" fill="#F25022" />
+                  <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
+                  <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
+                  <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
+                </svg>
+                {microsoftLoading ? 'Redirecting...' : 'Sign in with Microsoft'}
+              </button>
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-white px-3 text-gray-500 uppercase tracking-wide">
+                    Or use email code
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Step Indicator */}
           <div className="flex items-center justify-center mb-12">
             <div className="flex items-center">
@@ -226,7 +285,7 @@ export default function AdminLoginPage() {
                             email: email,
                           });
                           toast.success('Verification code resent!');
-                        } catch (error: any) {
+                        } catch (error: unknown) {
                           toast.error(handleApiError(error));
                         } finally {
                           setIsSendingCode(false);
@@ -281,4 +340,3 @@ export default function AdminLoginPage() {
     </div>
   );
 }
-

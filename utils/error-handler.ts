@@ -5,6 +5,7 @@ export function handleApiError(error: unknown): string {
     const axiosError = error as AxiosError<{
       detail?: string;
       message?: string;
+      error?: string;
       errors?: Record<string, string[]>;
     }>;
 
@@ -32,6 +33,10 @@ export function handleApiError(error: unknown): string {
 
       if (data?.message) {
         return data.message;
+      }
+
+      if (typeof data?.error === 'string') {
+        return data.error;
       }
 
       // HTTP status code messages
