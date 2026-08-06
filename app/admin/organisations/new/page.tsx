@@ -465,6 +465,10 @@ export default function NewOrganisationPage() {
                       </label>
                     ))}
                   </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    After create, open Authentication on the org to add Google/Microsoft credentials.
+                    Email code login stays available.
+                  </p>
                 </div>
 
                 <OrganisationEnabledModulesFields

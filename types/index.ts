@@ -1000,8 +1000,8 @@ export interface StaffOrganisation {
   email_domain?: string | null;
   /** Single auth method (API). Prefer this over allowed_auth_methods. */
   auth_method?: 'local' | 'google' | 'microsoft';
-  /** @deprecated Use auth_method — kept for older API responses */
-  allowed_auth_methods?: string[];
+  /** Enabled login methods; always includes local when multi-method is supported. */
+  allowed_auth_methods?: Array<'local' | 'google' | 'microsoft'>;
   /** Module keys enabled for this org, or null/omitted for “all modules”. Staff-only. */
   enabled_modules?: string[] | null;
   address?: any | null;
@@ -1017,6 +1017,37 @@ export interface StaffOrganisation {
   created: string;
   updated: string;
   deleted?: string | null;
+}
+
+export type OAuthProvider = 'google' | 'microsoft';
+
+export interface AuthProviderSettingsPublic {
+  provider: OAuthProvider;
+  configured: boolean;
+  has_client_secret: boolean;
+  client_id: string;
+  authority: string;
+  redirect_uri: string;
+  suggested_redirect_uri: string;
+  scope: string[];
+  enabled: boolean;
+}
+
+export interface OrganisationAuthSettingsResponse {
+  allowed_auth_methods: Array<'local' | 'google' | 'microsoft'>;
+  auth_method: 'local' | 'google' | 'microsoft';
+  providers: {
+    microsoft: AuthProviderSettingsPublic;
+    google: AuthProviderSettingsPublic;
+  };
+}
+
+export interface UpsertAuthProviderRequest {
+  client_id: string;
+  client_secret?: string;
+  authority?: string;
+  redirect_uri?: string;
+  scope?: string[];
 }
 
 export interface OwnerData {

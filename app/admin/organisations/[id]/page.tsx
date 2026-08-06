@@ -203,7 +203,7 @@ export default function OrganisationDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link
               href={`/admin/organisations/${organisationId}/portal`}
               className="group bg-white rounded-lg border border-gray-200 p-5 hover:border-admin/40 hover:bg-gray-50/50 transition-colors"
@@ -269,6 +269,38 @@ export default function OrganisationDetailPage() {
                 </span>
               </div>
             </Link>
+
+            <Link
+              href={`/admin/organisations/${organisationId}/authentication`}
+              className="group bg-white rounded-lg border border-gray-200 p-5 hover:border-admin/40 hover:bg-gray-50/50 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 group-hover:text-admin">
+                    Authentication
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Email code, Microsoft, and Google SSO for members
+                  </p>
+                </div>
+                <svg
+                  className="w-5 h-5 text-gray-400 group-hover:text-admin shrink-0 mt-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <div className="mt-4">
+                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 capitalize">
+                  {(organisation.allowed_auth_methods && organisation.allowed_auth_methods.length > 0
+                    ? organisation.allowed_auth_methods
+                    : [organisation.auth_method || 'local']
+                  ).join(' · ')}
+                </span>
+              </div>
+            </Link>
           </div>
 
           <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -316,9 +348,21 @@ export default function OrganisationDetailPage() {
                     <dt className="text-sm font-medium text-gray-500">Auth method</dt>
                     <dd className="mt-1">
                       <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded capitalize">
-                        {organisation.auth_method || 'local'}
+                        {(organisation.allowed_auth_methods &&
+                        organisation.allowed_auth_methods.length > 0
+                          ? organisation.allowed_auth_methods
+                          : [organisation.auth_method || 'local']
+                        ).join(' · ')}
                       </span>
                     </dd>
+                    <p className="mt-2 text-xs text-gray-500">
+                      <Link
+                        href={`/admin/organisations/${organisationId}/authentication`}
+                        className="text-admin hover:text-admin-600 font-medium"
+                      >
+                        Manage authentication / SSO
+                      </Link>
+                    </p>
                   </div>
                   <div className="sm:col-span-2">
                     <dt className="text-sm font-medium text-gray-500">Enabled modules</dt>
@@ -474,21 +518,18 @@ export default function OrganisationDetailPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Auth method</label>
-                    <div className="space-y-2">
-                      {(['local', 'google', 'microsoft'] as const).map((method) => (
-                        <label key={method} className="flex items-center">
-                          <input
-                            type="radio"
-                            name="auth_method"
-                            checked={formData.auth_method === method}
-                            onChange={() => setFormData({ ...formData, auth_method: method })}
-                            className="border-gray-300 text-admin focus:ring-admin"
-                          />
-                          <span className="ml-2 text-sm text-gray-700 capitalize">{method}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Authentication
+                    </label>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Configure email code, Microsoft, and Google SSO on the authentication page.
+                    </p>
+                    <Link
+                      href={`/admin/organisations/${organisationId}/authentication`}
+                      className="inline-flex text-sm font-medium text-admin hover:text-admin-600"
+                    >
+                      Open authentication settings
+                    </Link>
                   </div>
 
                   <div>

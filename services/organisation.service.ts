@@ -9,6 +9,9 @@ import {
   UpdateStaffOrganisationMemberRequest,
   StaffOrganisationRole,
   MarkPortalReadyResponse,
+  OrganisationAuthSettingsResponse,
+  AuthProviderSettingsPublic,
+  UpsertAuthProviderRequest,
 } from '@/types';
 
 /**
@@ -152,6 +155,45 @@ class OrganisationService {
   async listRoles(orgId: number): Promise<StaffOrganisationRole[]> {
     const response = await staffApiClient.get<StaffOrganisationRole[]>(
       `/organisation/${orgId}/roles/`
+    );
+    return response.data;
+  }
+
+  /**
+   * GET /organisation/<id>/auth-settings/
+   */
+  async getAuthSettings(orgId: number): Promise<OrganisationAuthSettingsResponse> {
+    const response = await staffApiClient.get<OrganisationAuthSettingsResponse>(
+      `/organisation/${orgId}/auth-settings/`
+    );
+    return response.data;
+  }
+
+  /**
+   * PATCH /organisation/<id>/auth-settings/
+   */
+  async updateAuthAllowedMethods(
+    orgId: number,
+    allowed_auth_methods: Array<'local' | 'google' | 'microsoft'>
+  ): Promise<OrganisationAuthSettingsResponse> {
+    const response = await staffApiClient.patch<OrganisationAuthSettingsResponse>(
+      `/organisation/${orgId}/auth-settings/`,
+      { allowed_auth_methods }
+    );
+    return response.data;
+  }
+
+  /**
+   * PUT /organisation/<id>/auth-settings/<provider>/
+   */
+  async upsertAuthProvider(
+    orgId: number,
+    provider: 'google' | 'microsoft',
+    data: UpsertAuthProviderRequest
+  ): Promise<AuthProviderSettingsPublic> {
+    const response = await staffApiClient.put<AuthProviderSettingsPublic>(
+      `/organisation/${orgId}/auth-settings/${provider}/`,
+      data
     );
     return response.data;
   }
