@@ -4,6 +4,7 @@ import {
   StaffSendVerificationCodeRequest,
   StaffLoginRequest,
   StaffUserResponse,
+  StaffLoginOptionsResponse,
 } from '@/types';
 
 // Staff auth endpoints use /staff prefix
@@ -15,6 +16,48 @@ const getStaffAuthBaseUrl = () => {
 const STAFF_AUTH_API_BASE_URL = getStaffAuthBaseUrl();
 
 class StaffAuthService {
+  /**
+   * Public: whether Microsoft SSO is configured for the staff portal
+   */
+  async getLoginOptions(): Promise<StaffLoginOptionsResponse> {
+    const response = await axios.get<StaffLoginOptionsResponse>(
+      `${STAFF_AUTH_API_BASE_URL}/auth/account/login-options`,
+      { withCredentials: true }
+    );
+    return response.data;
+  }
+
+  /**
+   * Exchange Microsoft authorization code for staff JWT + user
+   */
+  async exchangeCode(data: {
+    code: string;
+    state: string;
+  }): Promise<StaffUserResponse> {
+    const response = await axios.post(
+      `${STAFF_AUTH_API_BASE_URL}/auth/account/exchange-code`,
+      data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
+      }
+    );
+
+    const authToken = response.headers['set-auth-token'];
+    const refreshToken = response.headers['set-refresh-token'];
+
+    if (authToken && typeof window !== 'undefined') {
+      localStorage.setItem('staff_access_token', authToken);
+    }
+    if (refreshToken && typeof window !== 'undefined') {
+      localStorage.setItem('staff_refresh_token', refreshToken);
+    }
+
+    return response.data;
+  }
+
   /**
    * Send verification code (6-digit) to staff email
    */
@@ -114,4 +157,3 @@ class StaffAuthService {
 
 export const staffAuthService = new StaffAuthService();
 export default staffAuthService;
-
