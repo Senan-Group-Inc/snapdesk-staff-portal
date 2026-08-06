@@ -236,8 +236,34 @@ export default function OrganisationMemberDetailPage() {
               </div>
 
               <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Account</h2>
-                <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3 text-sm">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Details</h2>
+                <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 text-sm">
+                  <div>
+                    <dt className="font-medium text-gray-500">Name</dt>
+                    <dd className="mt-1 text-gray-900">{member.account_name || 'Not set'}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Email</dt>
+                    <dd className="mt-1 text-gray-900 break-all">
+                      {member.account_email || 'Not set'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Phone</dt>
+                    <dd className="mt-1 text-gray-900">{member.account_phone || 'Not set'}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Role</dt>
+                    <dd className="mt-1 text-gray-900">{member.role_name || 'No role'}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Position</dt>
+                    <dd className="mt-1 text-gray-900">{member.position || 'Not set'}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-gray-500">Department</dt>
+                    <dd className="mt-1 text-gray-900">{member.department || 'Not set'}</dd>
+                  </div>
                   <div>
                     <dt className="font-medium text-gray-500">Account ID</dt>
                     <dd className="mt-1 text-gray-900 font-mono">{member.account_id}</dd>
@@ -252,6 +278,22 @@ export default function OrganisationMemberDetailPage() {
                       {new Date(member.created).toLocaleString()}
                     </dd>
                   </div>
+                  {member.updated && (
+                    <div>
+                      <dt className="font-medium text-gray-500">Updated</dt>
+                      <dd className="mt-1 text-gray-900">
+                        {new Date(member.updated).toLocaleString()}
+                      </dd>
+                    </div>
+                  )}
+                  {member.date_hired && (
+                    <div>
+                      <dt className="font-medium text-gray-500">Date hired</dt>
+                      <dd className="mt-1 text-gray-900">
+                        {new Date(member.date_hired).toLocaleDateString()}
+                      </dd>
+                    </div>
+                  )}
                 </dl>
               </div>
             </>
