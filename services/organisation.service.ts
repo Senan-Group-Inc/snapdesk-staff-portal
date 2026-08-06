@@ -6,6 +6,7 @@ import {
   PaginatedStaffOrganisationsResponse,
   StaffOrganisationMember,
   CreateStaffOrganisationMemberRequest,
+  UpdateStaffOrganisationMemberRequest,
   StaffOrganisationRole,
   MarkPortalReadyResponse,
 } from '@/types';
@@ -108,6 +109,25 @@ class OrganisationService {
   ): Promise<StaffOrganisationMember> {
     const response = await staffApiClient.post<StaffOrganisationMember>(
       `/organisation/${orgId}/members/`,
+      data
+    );
+    return response.data;
+  }
+
+  async getMember(orgId: number, memberId: number): Promise<StaffOrganisationMember> {
+    const response = await staffApiClient.get<StaffOrganisationMember>(
+      `/organisation/${orgId}/members/${memberId}/`
+    );
+    return response.data;
+  }
+
+  async updateMember(
+    orgId: number,
+    memberId: number,
+    data: UpdateStaffOrganisationMemberRequest
+  ): Promise<StaffOrganisationMember> {
+    const response = await staffApiClient.patch<StaffOrganisationMember>(
+      `/organisation/${orgId}/members/${memberId}/`,
       data
     );
     return response.data;

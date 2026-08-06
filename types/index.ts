@@ -1056,6 +1056,8 @@ export interface StaffOrganisationMember {
   account_id: number;
   account_email?: string | null;
   account_phone?: string | null;
+  account_first_name?: string | null;
+  account_last_name?: string | null;
   account_name?: string;
   position?: string;
   department?: string | null;
@@ -1077,6 +1079,17 @@ export interface CreateStaffOrganisationMemberRequest {
   role_id?: number | null;
   position?: string;
   department?: string;
+}
+
+export interface UpdateStaffOrganisationMemberRequest {
+  email?: string;
+  phone_number?: string | null;
+  first_name?: string;
+  last_name?: string;
+  middle_name?: string;
+  role_id?: number | null;
+  position?: string;
+  department?: string | null;
 }
 
 export interface StaffOrganisationRole {
