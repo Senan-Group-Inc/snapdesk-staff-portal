@@ -101,7 +101,7 @@ export default function NewStaffRolePage() {
           </Link>
           <h1 className="mt-3 text-3xl font-bold text-gray-900">Create Staff Role</h1>
           <p className="mt-2 text-sm text-gray-600">
-            SnapDesk permissions for the Senan team, plus optional GLPI profile mapping
+            Senan Service Desk permissions for the Senan team, plus optional GLPI profile mapping
             used when provisioning engine logins.
           </p>
 

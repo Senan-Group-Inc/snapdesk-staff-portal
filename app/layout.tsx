@@ -10,7 +10,7 @@ const urbanist = Urbanist({
 })
 
 export const metadata: Metadata = {
-  title: 'Service Desk — Staff admin',
+  title: 'Senan Service Desk - Staff admin',
   description: 'Senan Service Desk platform administration',
 }
 

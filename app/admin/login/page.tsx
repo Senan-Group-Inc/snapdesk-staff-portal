@@ -70,7 +70,7 @@ export default function AdminLoginPage() {
       <div className="max-w-lg w-full">
         {/* Logo/Header */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Service Desk</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Senan Service Desk</h1>
           <h2 className="text-xl font-semibold text-gray-700">
             Staff Login
           </h2>

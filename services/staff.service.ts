@@ -303,7 +303,7 @@ class StaffService {
   }
 
   /**
-   * Create SnapDesk staff and provision a matching GLPI login
+   * Create Senan Service Desk staff and provision a matching GLPI login
    * POST /api/v1/staff/staff/profiles/create_with_glpi
    */
   async createStaffWithGlpi(

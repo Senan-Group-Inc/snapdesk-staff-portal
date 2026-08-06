@@ -126,7 +126,7 @@ export default function AdminSidebar() {
         {/* Logo/Brand */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <h1 className="text-lg font-semibold text-gray-900">
-            Service Desk Admin
+            Senan Service Desk
           </h1>
         </div>
 

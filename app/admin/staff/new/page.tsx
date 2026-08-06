@@ -118,7 +118,7 @@ export default function NewStaffPage() {
             </Link>
             <h1 className="mt-3 text-3xl font-bold text-gray-900">Add Staff Member</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Creates a SnapDesk staff account and optionally a matching GLPI login
+              Creates a Senan Service Desk staff account and optionally a matching GLPI login
               so tech can sign into the engine UI. You can also promote an existing
               organisation member by using their email.
             </p>
@@ -132,12 +132,12 @@ export default function NewStaffPage() {
               </p>
               <dl className="space-y-3 text-sm">
                 <div>
-                  <dt className="text-gray-500">SnapDesk email</dt>
+                  <dt className="text-gray-500">Senan Service Desk email</dt>
                   <dd className="font-mono text-gray-900">{credentials.email}</dd>
                 </div>
                 {credentials.snapdeskPassword && (
                   <div>
-                    <dt className="text-gray-500">SnapDesk password</dt>
+                    <dt className="text-gray-500">Senan Service Desk password</dt>
                     <dd className="font-mono text-gray-900">{credentials.snapdeskPassword}</dd>
                   </div>
                 )}
@@ -269,7 +269,7 @@ export default function NewStaffPage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-admin focus:border-admin font-mono"
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  Same password is used for SnapDesk and GLPI when provisioning.
+                  Same password is used for Senan Service Desk and GLPI when provisioning.
                 </p>
               </div>
 

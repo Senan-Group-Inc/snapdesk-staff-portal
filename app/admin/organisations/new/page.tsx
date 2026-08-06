@@ -221,7 +221,10 @@ export default function NewOrganisationPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Business Owner Account</h3>
                   <p className="text-sm text-gray-600 mb-6">
-                    Create the business owner account. The owner will automatically receive the "Super Admin" role when the organization is created.
+                    Set the business owner. If this email already belongs to a Senan
+                    team account, we reuse that Account and add an organisation
+                    membership (EmployeeProfile) so they can use both portals. New
+                    owners get the Super Admin role when the organisation is created.
                   </p>
                 </div>
 
@@ -237,7 +240,8 @@ export default function NewOrganisationPage() {
                     placeholder="owner@example.com"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Required for portal-ready emails. Phone is optional.
+                    Required for portal-ready emails. Existing Senan staff emails are
+                    linked, not duplicated.
                   </p>
                 </div>
 
